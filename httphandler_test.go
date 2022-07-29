@@ -7,14 +7,15 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestHttpHandlerServeHTTP(t *testing.T) {
 	ctx := context.Background()
 	testUrls := []string{
-		"https://google.com",
-		"https://amazon.com",
-		"https://facebook.com",
+		"https://not111111.com",
+		"https://real111111.com",
+		"https://url111111.com",
 	}
 	urls := strings.Join(testUrls, "\n")
 	req, err := http.NewRequestWithContext(ctx, "POST", "/", bytes.NewBufferString(urls))
@@ -39,7 +40,7 @@ func TestHttpHandlerServeHTTP(t *testing.T) {
 func TestHttpHandlerServeHTTPManyConnections(t *testing.T) {
 	ctx := context.Background()
 	testUrls := []string{
-		"https://google.com",
+		"https://notreal11111.com",
 	}
 	urls := strings.Join(testUrls, "\n")
 	handler := NewHTTPHandler()
@@ -69,6 +70,21 @@ func TestHttpHandlerServeHTTPManyConnections(t *testing.T) {
 		if rr.Code != http.StatusServiceUnavailable {
 			t.Errorf("handler returned wrong status code: got %v want %v",
 				rr.Code, http.StatusServiceUnavailable)
+		}
+	}()
+
+	time.Sleep(time.Second * 7)
+	go func() {
+		req, err := http.NewRequestWithContext(ctx, "POST", "/", bytes.NewBufferString(urls))
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		rr := httptest.NewRecorder()
+		handler.ServeHTTP(rr, req)
+
+		if rr.Code != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				rr.Code, http.StatusOK)
 		}
 	}()
 }
